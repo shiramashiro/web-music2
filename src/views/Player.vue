@@ -2,62 +2,52 @@
 import { ref } from 'vue'
 import musics from '../assets/data/musics'
 
-let audio = ref<any>(null)
+let audio = ref<any>(null) // audio的DOM节点
+let progress = ref<any>(null)
+let controlIcon = ref('/icon/播放.png')
 
-let cureentIndex = ref(0) // 当前歌曲索引
-let isPlaying = ref(false) // 是否播放中
 let songs = ref(musics) // 歌曲列表
+let isPlaying = ref(false) // 是否播放中
+let currentIndex = ref(0) // 当前歌曲索引
 let lastSong = ref(songs.value[songs.value.length - 1]) // 上一首歌曲
-let currentSong = ref(songs.value[cureentIndex.value]) // 当前歌曲
-let nextSong = ref(songs.value[cureentIndex.value + 1]) // 下一首歌曲
+let currentSong = ref(songs.value[currentIndex.value]) // 当前歌曲
+let nextSong = ref(songs.value[currentIndex.value + 1]) // 下一首歌曲
 let animation = ref({
-    last: false,
-    next: false,
-    currentToNex: false,
-    lastToCurrent: false,
+    lastFilm: false,
+    nextFilm: false,
+    currentToNextFilm: false,
+    lastToCurrentFilm: false,
     dropdown: false,
     dropup: false
 })
+
 let axisWidth = ref(0) // 进度条宽
 
 /**
- * 对lastSong、currentSong、nextSong进行赋值。
+ * 改变歌曲的顺序
  */
-function setSongsPosition(): void {
-    let startPoint: number = 0 // 开始临界值
-    let endPoint: number = songs.value.length - 1 // 终点临界值
-    let lastIndex: number = 0 // 上一首歌曲索引值
-    let nextIndex: number = 0 // 下一首歌曲索引值
-    if (cureentIndex.value == startPoint) {
-        nextIndex = cureentIndex.value + 1
+function replaceSongsSequence(callback: Function): void {
+    callback()
+
+    let startPoint: number = 0 // 歌曲列表开始索引
+    let endPoint: number = songs.value.length - 1 // 歌曲列表结束索引
+    let lastIndex: number = 0 // 上一首歌曲索引
+    let nextIndex: number = 0 // 下一首歌曲索引
+
+    if (currentIndex.value == startPoint) {
+        nextIndex = currentIndex.value + 1
         lastIndex = endPoint
-    } else if (cureentIndex.value == endPoint) {
-        nextIndex = 0
-        lastIndex = cureentIndex.value - 1
+    } else if (currentIndex.value == endPoint) {
+        nextIndex = startPoint
+        lastIndex = currentIndex.value - 1
     } else {
-        nextIndex = cureentIndex.value + 1
-        lastIndex = cureentIndex.value - 1
+        nextIndex = currentIndex.value + 1
+        lastIndex = currentIndex.value - 1
     }
+
+    currentSong.value = songs.value[currentIndex.value]
     nextSong.value = songs.value[nextIndex]
     lastSong.value = songs.value[lastIndex]
-}
-
-/**
- * 播放下一首歌曲
- */
-function playNextSong(): void {
-    animation.value.currentToNex = true
-    animation.value.next = true
-    setTimeout(() => {
-        cureentIndex.value++
-        if (cureentIndex.value > songs.value.length - 1) {
-            cureentIndex.value = 0
-        }
-        currentSong.value = songs.value[cureentIndex.value]
-        setSongsPosition()
-        animation.value.currentToNex = false
-        animation.value.next = false
-    }, 1000)
 }
 
 /**
@@ -67,34 +57,54 @@ function controlAudio(): void {
     if (isPlaying.value) {
         audio.value.pause()
         isPlaying.value = false
+        controlIcon.value = '/icon/播放.png'
     } else {
         audio.value.play()
         isPlaying.value = true
+        controlIcon.value = '/icon/暂停.png'
     }
+}
+
+/**
+ * 播放下一首歌曲
+ */
+function setNextSong(): void {
+    animation.value.currentToNextFilm = true
+    animation.value.nextFilm = true
+    setTimeout(() => {
+        replaceSongsSequence(() => {
+            currentIndex.value++
+            if (currentIndex.value > songs.value.length - 1) {
+                currentIndex.value = 0
+            }
+        })
+        animation.value.currentToNextFilm = false
+        animation.value.nextFilm = false
+    }, 1000)
 }
 
 /**
  * 播放上一首歌曲
  */
-function playLastSong(): void {
-    animation.value.lastToCurrent = true
-    animation.value.last = true
+function setLastSong(): void {
+    animation.value.lastToCurrentFilm = true
+    animation.value.lastFilm = true
     setTimeout(() => {
-        cureentIndex.value--
-        if (cureentIndex.value < 0) {
-            cureentIndex.value = songs.value.length - 1
-        }
-        currentSong.value = songs.value[cureentIndex.value]
-        setSongsPosition()
-        animation.value.lastToCurrent = false
-        animation.value.last = false
+        replaceSongsSequence(() => {
+            currentIndex.value--
+            if (currentIndex.value < 0) {
+                currentIndex.value = songs.value.length - 1
+            }
+        })
+        animation.value.lastToCurrentFilm = false
+        animation.value.lastFilm = false
     }, 1000)
 }
 
 /**
  * 控制是否展示歌曲列表
  */
-function controlSongPanel(): void {
+function controlSongsPanel(): void {
     if (!animation.value.dropdown) {
         animation.value.dropdown = true
     } else {
@@ -109,17 +119,31 @@ function controlSongPanel(): void {
 /**
  * 歌曲每播放一帧调用该函数
  */
-function timeupdate(): void {}
+function timeupdate(): void {
+    axisWidth.value = (audio.value.currentTime / audio.value.duration) * 100
+}
+
+/**
+ * 改变歌曲进度条
+ */
+function dragProgress(event: any): void {
+    let rate = event.offsetX / progress.value.offsetWidth
+    axisWidth.value = rate * 100
+    audio.value.currentTime = audio.value.duration * rate
+}
 
 /**
  * 当歌曲播放完成时
  */
-function ended(): void {}
+function ended(): void {
+    controlAudio()
+    setNextSong()
+}
 </script>
 
 <template>
     <div id="player">
-        <div class="masking" v-bind:style="{ backgroundImage: 'url(' + currentSong.surface + ')' }"></div>
+        <div class="masking" :style="{ backgroundImage: 'url(' + currentSong.surface + ')' }"></div>
         <div class="content">
             <div class="player-row-1 flex flex-between">
                 <img class="col-1" src="../assets/img/dropdown.png" alt="" />
@@ -130,20 +154,20 @@ function ended(): void {}
                 <img class="col-3" src="../assets/img/sharing.png" alt="" />
             </div>
             <div class="player-row-2 flex flex-center">
-                <div class="film" style="display: none" v-bind:class="{ 'last-film': animation.last }">
-                    <img class="surface" v-bind:src="lastSong.surface" />
+                <div class="film" style="display: none" :class="{ 'last-film': animation.lastFilm }">
+                    <img class="surface" :src="lastSong.surface" />
                 </div>
                 <div
                     class="film"
-                    v-bind:class="{
-                        'from-current-to-next-film': animation.currentToNex,
-                        'from-last-to-current-film': animation.lastToCurrent
+                    :class="{
+                        'from-current-to-next-film': animation.currentToNextFilm,
+                        'from-last-to-current-film': animation.lastToCurrentFilm
                     }"
                 >
-                    <img class="surface" v-bind:src="currentSong.surface" />
+                    <img class="surface" :src="currentSong.surface" />
                 </div>
-                <div class="film" style="display: none" v-bind:class="{ 'next-film': animation.next }">
-                    <img class="surface" v-bind:src="nextSong.surface" />
+                <div class="film" style="display: none" :class="{ 'next-film': animation.nextFilm }">
+                    <img class="surface" :src="nextSong.surface" />
                 </div>
             </div>
             <!-- 歌词 -->
@@ -158,27 +182,27 @@ function ended(): void {}
                 </div>
                 <!-- 进度条 -->
                 <div class="row-2 flex flex-between">
-                    <div class="processor">
+                    <div @click="dragProgress($event)" ref="progress" class="progress">
                         <!-- 轴 -->
-                        <div class="axis" v-bind:style="{ width: axisWidth + '%' }"></div>
+                        <div class="axis" :style="{ width: axisWidth + '%' }"></div>
                     </div>
                 </div>
                 <!-- 操作 -->
-                <div class="row-3 flex flex-between">
+                <div class="row-3 flex flex-between items-center">
                     <img class="col-1" src="../assets/img/recycle.png" />
-                    <img class="col-2" v-on:click="playLastSong" src="../assets/img/last.png" />
-                    <img class="col-3" v-on:click="controlAudio" src="../assets/img/last.png" />
-                    <img class="col-4" v-on:click="playNextSong" src="../assets/img/next.png" />
-                    <img class="drop-or-down-music-list" v-on:click="controlSongPanel" src="../assets/img/play-list_white.png" />
+                    <img class="col-2" @click="setLastSong" src="../assets/img/last.png" />
+                    <img class="col-3" @click="controlAudio" :src="controlIcon" />
+                    <img class="col-4" @click="setNextSong" src="../assets/img/last.png" />
+                    <img class="drop-or-down-music-list" @click="controlSongsPanel" src="../assets/img/play-list_white.png" />
                 </div>
             </div>
         </div>
         <!-- 音乐列表 -->
-        <div class="music-list" v-bind:class="{ 'dropup-list': animation.dropup, 'dropdown-list': animation.dropdown }">
+        <div class="music-list" :class="{ 'dropup-list': animation.dropup, 'dropdown-list': animation.dropdown }">
             <!-- 列表菜单 -->
             <div class="list-menu flex flex-end">
                 <!-- 关闭按钮 -->
-                <img class="close" v-on:click="controlSongPanel" src="../assets/img/close.png" />
+                <img class="close" @click="controlSongsPanel" src="../assets/img/close.png" />
             </div>
             <!-- 列表头部 -->
             <div class="list-header flex flex-between">
@@ -188,18 +212,18 @@ function ended(): void {}
             <!-- 列表项 -->
             <div
                 class="list-item flex flex-between"
-                v-bind:class="{ 'playing-music': index == cureentIndex ? true : false }"
+                v-bind:class="{ 'playing-music': index == currentIndex ? true : false }"
                 v-for="(item, index) in songs"
                 :key="index"
             >
                 <div class="col-1 flex">
-                    <img class="current-play" src="../assets/img/playing.png" v-if="index == cureentIndex" />
+                    <img class="current-play" src="../assets/img/playing.png" v-if="index == currentIndex" />
                     <div class="name">{{ item.name }}</div>
                 </div>
                 <div class="col-2">{{ item.album }}</div>
             </div>
         </div>
-        <audio v-on:ended="ended" v-on:timeupdate="timeupdate" ref="audio" v-bind:src="currentSong.src"></audio>
+        <audio @ended="ended" @timeupdate="timeupdate" ref="audio" :src="currentSong.src"></audio>
     </div>
 </template>
 
@@ -309,20 +333,20 @@ function ended(): void {}
 }
 
 /* 进度条 */
-.player-row-4 .row-2 .processor {
+.player-row-4 .row-2 .progress {
     width: 100%;
     height: 0.5vh;
     background-color: rgb(176 176 176);
 }
 
-.player-row-4 .row-2 .processor .axis {
+.player-row-4 .row-2 .progress .axis {
     position: relative;
     height: 100%;
     border-radius: 0 5px 5px 0px;
     background-color: white;
 }
 
-.player-row-4 .row-2 .processor .axis::after {
+.player-row-4 .row-2 .progress .axis::after {
     content: '';
     position: absolute;
     border-radius: 100%;
@@ -341,6 +365,10 @@ function ended(): void {}
 .player-row-4 .row-3 .col-3 {
     width: 8vw !important;
     height: 8vw !important;
+}
+
+.player-row-4 .row-3 .col-4 {
+    transform: rotate(180deg);
 }
 
 /* 唱片 */
