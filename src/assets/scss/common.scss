@@ -1,0 +1,61 @@
+html {
+    font-size: 40px;
+}
+
+.flex {
+    display: flex;
+}
+
+.items-center {
+    align-items: center;
+    align-content: center;
+}
+
+.flex-center {
+    justify-content: center;
+}
+
+.flex-start {
+    justify-content: flex-start;
+}
+
+.flex-end {
+    justify-content: flex-end;
+}
+
+.flex-around {
+    justify-content: space-around;
+}
+
+.flex-between {
+    justify-content: space-between;
+}
+
+.overflow-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.overflow-y {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.inherit-wh {
+    width: 100%;
+    height: 100%;
+}
+
+.inherit-w {
+    width: 100%;
+}
+
+.inherit-h {
+    height: 100%;
+}
+
+.textflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -1,5 +1,9 @@
 <script setup lang="ts"></script>
 
-<template></template>
+<template>
+    <router-view />
+</template>
 
-<style></style>
+<style lang="scss">
+@import url('./assets/scss/common.scss');
+</style>
