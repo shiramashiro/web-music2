@@ -1,11 +1,7 @@
-# Vue 3 + Typescript + Vite
+# 基本说明
 
-This template should help get you started developing with Vue 3 and Typescript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+项目采用 Vue 3 + Typescript + Vite 构建音乐播放器，是基于[web-music](https://github.com/shiramashiro/web-music)项目的交互逻辑、布局设计、功能设计等原型设计，而用不同技术来实现的 Web 音乐播放器。
 
-## Recommended IDE Setup
+Vue3 使用 `<script setup>` SFCs 来实现 JS（TS）代码，具体查看[script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup)官方文档。
 
--   [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar)
-
-## Type Support For `.vue` Imports in TS
-
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's `.vue` type support plugin by running `Volar: Switch TS Plugin on/off` from VSCode command palette.
+使用 VSCode 与其扩展插件[Volar](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar)来编辑代码和实现项目。
